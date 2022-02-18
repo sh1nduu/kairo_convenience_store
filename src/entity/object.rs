@@ -1,19 +1,19 @@
 use crate::entity::point::Point;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ObjectKind {
     Shelf,
     Equipment,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Shape {
     Square,
     Plus,
     Cross,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Object {
     pub id: String,
     pub kind: ObjectKind,

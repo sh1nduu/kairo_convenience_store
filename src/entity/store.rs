@@ -3,9 +3,12 @@ use crate::entity::point::Point;
 
 type Table = Vec<Vec<i64>>;
 
+#[derive(Debug, Clone)]
 pub struct Store {
     pub size: Point,
     pub table: Table,
+    width: usize,
+    height: usize,
 }
 
 impl Store {
@@ -15,7 +18,13 @@ impl Store {
         Self {
             size: Point::new(x_i64, y_i64),
             table: vec![vec![0; width]; height],
+            width,
+            height,
         }
+    }
+
+    pub fn init_table(&mut self) {
+        self.table = vec![vec![0; self.width]; self.height];
     }
 
     pub fn apply_appeal(&mut self, object: &Object) {

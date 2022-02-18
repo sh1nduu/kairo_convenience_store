@@ -1,4 +1,5 @@
 use kairo_convenience_store::entity::*;
+use kairo_convenience_store::solver::*;
 
 fn main() {
     let store = Store::new(8, 8);
@@ -12,6 +13,10 @@ fn main() {
     game.add_object(s2);
     game.add_object(e1);
     game.add_object(e2);
+
+    game.add_solver(Solver::random("#1"));
+    game.add_solver(Solver::random("#2"));
+    game.add_solver(Solver::random("#3"));
 
     game.layout();
     game.print();

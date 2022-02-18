@@ -1,19 +1,18 @@
-use rand::distributions::{Distribution, Uniform};
-
-use crate::entity::object::Object;
-use crate::entity::point::Point;
-use crate::entity::store::Store;
+use crate::entity::{Object, Store};
+use crate::solver::{Solve, Solver};
 
 pub struct Game {
     store: Store,
     objects: Vec<Object>,
+    solvers: Vec<Solver>,
 }
 
 impl Game {
     pub fn new(store: Store) -> Self {
         Self {
             store,
-            objects: Vec::new(),
+            objects: vec![],
+            solvers: vec![],
         }
     }
 
@@ -21,18 +20,13 @@ impl Game {
         self.objects.push(object);
     }
 
+    pub fn add_solver(&mut self, solver: Solver) {
+        self.solvers.push(solver);
+    }
+
     pub fn layout(&mut self) {
-        let mut rng = rand::thread_rng();
-        let die = Uniform::<usize>::from(0..3);
-        for x in 0..self.store.size.x {
-            for y in 0..self.store.size.y {
-                if die.sample(&mut rng) != 0 {
-                    continue;
-                }
-                if let Some(mut object) = self.choose_object() {
-                    object.offset = Some(Point::new(x, y));
-                }
-            }
+        for solver in &mut self.solvers {
+            solver.solve(&self.store, &self.objects);
         }
     }
 
@@ -43,54 +37,41 @@ impl Game {
             println!("{:?}", object);
         }
 
-        println!("Location");
-
-        let mut store = vec![];
-        for i in 0..self.store.size.area() {
-            if i > 0 && i % self.store.size.x == 0 {
-                print!("\n");
-            }
-            let point = self.store.size.from1d(i);
-            if let Some(object) = self.find_object(&point) {
-                store.push(object.id.clone());
-                print!("{:>5},", object.id);
-            } else {
-                store.push("".to_owned());
-                print!("{:>5},", "#");
-            }
-        }
-        print!("\n");
-
-        println!("Appeals");
-        for object in &self.objects {
-            self.store.apply_appeal(&object);
-        }
-
-        for row in &self.store.table {
-            for col in row {
-                print!("{:>5b},", col);
-            }
-            print!("\n");
+        for solver in &self.solvers {
+            println!("Answer by {}", solver.name());
+            self.print_answer(solver);
         }
     }
 
-    fn choose_object<'a>(&'a mut self) -> Option<&'a mut Object> {
-        if self.objects.len() == 0 {
-            return None;
-        }
-        let mut rng = rand::thread_rng();
-        let die = Uniform::<usize>::from(0..self.objects.len());
-        Some(&mut self.objects[die.sample(&mut rng)])
-    }
+    fn print_answer(&self, solver: &Solver) {
+        if let Some(answer) = solver.answer() {
+            println!("Location");
 
-    fn find_object<'a>(&'a self, point: &Point) -> Option<&'a Object> {
-        for object in self.objects.iter() {
-            if let Some(offset) = &object.offset {
-                if offset == point {
-                    return Some(&object);
+            for i in 0..self.store.size.area() {
+                let i_i64: i64 = i.try_into().unwrap();
+
+                if i > 0 && i_i64 % self.store.size.x == 0 {
+                    print!("\n");
+                }
+                let point = self.store.size.from1d(i);
+                if let Some(object) = answer.find_object(&point) {
+                    print!("{:>5},", object.id);
+                } else {
+                    print!("{:>5},", "#");
                 }
             }
+            print!("\n");
+
+            println!("Appeals");
+
+            for row in &answer.store.table {
+                for col in row {
+                    print!("{:>5b},", col);
+                }
+                print!("\n");
+            }
+        } else {
+            println!("no answer");
         }
-        None
     }
 }
